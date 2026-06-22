@@ -40,5 +40,11 @@ class BasePage:
 
     def is_displayed(self, locator):
         return self.find_element(locator).is_displayed()
+    
+    #def get_url(self):
+    #    return self.driver.current_url   
 
     # click(), send_keys(), find_element(), select_dropdown_value() == Abstraction methods
+
+    def get_url(self):
+        return self.driver.current_url

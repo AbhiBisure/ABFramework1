@@ -6,17 +6,18 @@ from selenium import webdriver
 import settings
 from Utils.logger import get_logger
 from pages.home_page import HomePage
+from pages.shop_page import ShopPage
 
 logger = get_logger()
 
 def pytest_addoption(parser):
-    parser.addoption("--browser",default="chrome")
+    parser.addoption("--browser_name",default="chrome")
     parser.addoption("--headless",action="store_true")
     parser.addoption("--env",default="QA")
 
 @pytest.fixture()
 def get_browser(request):
-    browser=request.config.getoption("--browser")
+    browser=request.config.getoption("--browser_name")
     return browser
 
 @pytest.fixture()
@@ -57,6 +58,7 @@ def get_driver(request,get_browser,get_env,is_headless):
     driver.maximize_window()
 #    request.cls.driver = driver
     request.cls.home_page = HomePage(driver)
+    request.cls.shop_page = ShopPage(driver)
     yield driver
     driver.quit()
 
