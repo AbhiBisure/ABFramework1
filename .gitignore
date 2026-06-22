@@ -1,0 +1,35 @@
+venv/
+.idea/
+.pytest_cache/
+__pycache__/
+.DS_Store
+geckodriver.log
+assets/
+# Virtual Environment
+.venv/
+venv/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Pytest
+.pytest_cache/
+
+# Reports
+reports/
+*.html
+
+# Screenshots
+screenshots/
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+
+# OS Files
+.DS_Store
+Thumbs.db
