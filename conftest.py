@@ -1,76 +1,100 @@
-from pathlib import Path
-import pytest
-from pygments.styles import default
-from selenium import webdriver
 
-import settings
-from Utils.logger import get_logger
+import pytest
+import logging
+from selenium import webdriver
+from Utils.screenshot_utils import save_screenshot
+from Utils.config_reader import ConfigReader
 from pages.home_page import HomePage
 from pages.shop_page import ShopPage
 
-logger = get_logger()
+# =========================
+# Logging Configuration
+# =========================
+logging.basicConfig(
+    filename="automation.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
-def pytest_addoption(parser):
-    parser.addoption("--browser_name",default="chrome")
-    parser.addoption("--headless",action="store_true")
-    parser.addoption("--env",default="QA")
-
-@pytest.fixture()
-def get_browser(request):
-    browser=request.config.getoption("--browser_name")
-    return browser
-
-@pytest.fixture()
-def get_env(request):
-    env=request.config.getoption("--env")
-    return env
-
-@pytest.fixture()
-def is_headless(request):
-    return request.config.getoption("--headless")
-
-@pytest.fixture()
-def get_driver(request,get_browser,get_env,is_headless):
-    global driver
-    if get_browser.lower() == "chrome":
-        chrome_options = webdriver.ChromeOptions()
-        if is_headless:
-            chrome_options.add_argument("--headless")
-        logger.info("Launching Chrome Browser")
-        driver = webdriver.Chrome(options=chrome_options)
-    elif get_browser.lower() == "firefox":
-        firefox_options = webdriver.FirefoxOptions()
-        if is_headless:
-            firefox_options.add_argument("-headless")
-        logger.info("Launching Firefox Browser")
-        driver = webdriver.Firefox(options=firefox_options)
-    else:
-        print(f"Browser'{get_browser}' is not supported.")
-        #raise ValueError(
-        #    f"Browser '{get_browser}' is not supported"
-        #)
-    if get_env.upper() == "QA":
-        driver.get(settings.QA_URL)
-    elif get_env.upper() == "UAT":
-        driver.get(settings.UAT_URL)
-
-    driver.implicitly_wait(10)
-    driver.maximize_window()
-#    request.cls.driver = driver
-    request.cls.home_page = HomePage(driver)
-    request.cls.shop_page = ShopPage(driver)
-    yield driver
-    driver.quit()
-
-
+# =========================
+# Screenshot Hook
+# =========================
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item):
     outcome = yield
     rep = outcome.get_result()
     if rep.when == "call" and rep.failed:
         driver = item.funcargs['get_driver']
-        screenshot_dir = Path("screenshots")
-        screenshot_dir.mkdir(exist_ok=True)
-        screenshot_file = screenshot_dir / f"{item.name}.png"
-        driver.save_screenshot(str(screenshot_file))
-        print(f"Screenshot saved to {screenshot_file}")
+        if driver:
+            path = save_screenshot(driver, item.name)
+            print(f" Screenshot saved to {path}")
+
+# =========================
+# CLI Options
+# =========================
+def pytest_addoption(parser):
+    parser.addoption("--browser_name", default="chrome")
+    parser.addoption("--headless", action="store_true")
+    parser.addoption("--env", default="QA")
+
+# =========================
+# Fixtures
+# =========================
+@pytest.fixture
+def browser(request):
+    return request.config.getoption("--browser_name")
+
+@pytest.fixture
+def env(request):
+    return request.config.getoption("--env")
+
+@pytest.fixture
+def headless(request):
+    return request.config.getoption("--headless")
+
+# =========================
+# Driver Fixture
+# =========================
+@pytest.fixture
+def get_driver(request, browser, env, headless):
+
+    logger = logging.getLogger(__name__)
+    # STEP 1: Read config based on environment
+    config = ConfigReader(env)
+    driver = None
+
+    if browser.lower() == "chrome":
+        options = webdriver.ChromeOptions()
+        if headless:
+            options.add_argument("--headless")
+
+        logger.info("Launching Chrome browser")
+        driver = webdriver.Chrome(options=options)
+
+    elif browser.lower() == "firefox":
+        options = webdriver.FirefoxOptions()
+        if headless:
+            options.add_argument("--headless")
+
+        logger.info("Launching Firefox browser")
+        driver = webdriver.Firefox(options=options)
+
+    else:
+        raise ValueError(f"Unsupported browser: {browser}")
+
+    # Environment selection
+    url = config.get("url")
+    logger.info(f"Opening URL: {url}")
+    driver.get(url)
+
+    driver.maximize_window()
+    driver.implicitly_wait(10)
+
+    # Page Object injection
+    request.cls.home_page = HomePage(driver)
+    request.cls.shop_page = ShopPage(driver)
+
+    yield driver
+
+    logger.info("Closing browser")
+    driver.quit()
