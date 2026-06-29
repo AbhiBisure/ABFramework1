@@ -14,7 +14,7 @@ class HomePage(BasePage):
     STUDENT=(By.XPATH,"//label[text()='Student']")
     EMPLOYED = (By.XPATH, "//label[text()='Employed']")
     GENDER= (By.ID,"exampleFormControlSelect1")
-    SUBMIT=(By.XPATH,"//input[@type='submit']")
+    SUBMIT_BUTTON=(By.XPATH,"//input[@type='submit']")
     SUCCESSFULL_SUBMITED_MESSAGE= (By.CLASS_NAME,"alert")
     DATE=(By.XPATH,"//label[text()='Date of Birth']/../input[@class ='form-control']")
 
@@ -46,7 +46,7 @@ class HomePage(BasePage):
             self.select_dropdown_value(self.GENDER,"Female")
 
     def submit(self):
-        self.click(self.SUBMIT)
+        self.click(self.SUBMIT_BUTTON)
 
     def success_text(self):
         return self.get_text(self.SUCCESSFULL_SUBMITED_MESSAGE)

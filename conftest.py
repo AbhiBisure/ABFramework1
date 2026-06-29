@@ -1,20 +1,11 @@
 
 import pytest
-import logging
 from selenium import webdriver
-from Utils.screenshot_utils import save_screenshot
-from Utils.config_reader import ConfigReader
+from utils.screenshot_utils import save_screenshot
+from utils.config_reader import ConfigReader
+from utils.logger import get_logger
 from pages.home_page import HomePage
 from pages.shop_page import ShopPage
-
-# =========================
-# Logging Configuration
-# =========================
-logging.basicConfig(
-    filename="automation.log",
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
 
 # =========================
 # Screenshot Hook
@@ -42,11 +33,11 @@ def pytest_addoption(parser):
 # =========================
 @pytest.fixture
 def browser(request):
-    return request.config.getoption("--browser_name")
+    return request.config.getoption("--browser_name").lower()
 
 @pytest.fixture
 def env(request):
-    return request.config.getoption("--env")
+    return request.config.getoption("--env").upper()
 
 @pytest.fixture
 def headless(request):
@@ -58,12 +49,10 @@ def headless(request):
 @pytest.fixture
 def get_driver(request, browser, env, headless):
 
-    logger = logging.getLogger(__name__)
-    # STEP 1: Read config based on environment
-    config = ConfigReader(env)
+    logger = get_logger(__name__)
     driver = None
 
-    if browser.lower() == "chrome":
+    if browser== "chrome":
         options = webdriver.ChromeOptions()
         if headless:
             options.add_argument("--headless")
@@ -71,7 +60,7 @@ def get_driver(request, browser, env, headless):
         logger.info("Launching Chrome browser")
         driver = webdriver.Chrome(options=options)
 
-    elif browser.lower() == "firefox":
+    elif browser == "firefox":
         options = webdriver.FirefoxOptions()
         if headless:
             options.add_argument("--headless")
@@ -82,13 +71,12 @@ def get_driver(request, browser, env, headless):
     else:
         raise ValueError(f"Unsupported browser: {browser}")
 
-    # Environment selection
-    url = config.get("url")
-    logger.info(f"Opening URL: {url}")
-    driver.get(url)
+    config = ConfigReader(env)
+    driver.get(config.get("url"))
+    print(config.get("username"))
+    print(config.get("password"))
 
     driver.maximize_window()
-    driver.implicitly_wait(10)
 
     # Page Object injection
     request.cls.home_page = HomePage(driver)

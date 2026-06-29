@@ -1,5 +1,4 @@
-import logging
-
+from utils.logger import get_logger
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.wait import WebDriverWait
@@ -10,7 +9,7 @@ class BasePage():
     def __init__(self, driver):
         self.driver = driver
         self.wait = WebDriverWait(driver, 10)
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = get_logger(self.__class__.__name__)
 
     def open_url(self, url):
         self.logger.info(f"Opening URL: {url}")
