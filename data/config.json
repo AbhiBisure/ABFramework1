@@ -1,6 +1,8 @@
 {
   "QA": {
-    "url": "https://rahulshettyacademy.com/angularpractice/"
+    "url": "https://rahulshettyacademy.com/angularpractice/",
+    "username": "testuser",
+    "password": "testpassword"
   },
   "UAT": {
     "url": "https://uat.example.com"
